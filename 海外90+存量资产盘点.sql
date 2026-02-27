@@ -210,55 +210,6 @@ order by 1,2,3,4
 
 
 
------------------------------建立资产维度各逾期阶段基表--------------------
-
-drop table if exists dm_aifox.asset_day_detail_jf_wyx20260226;
-
-create table if not exists dm_aifox.asset_day_detail_jf_wyx20260226 as 
-
-select 
-  a.asset_item_no,   ---资产编号
-  a.user_id,    ---用户编号
-  if(a.user_debt_status='new_user','new','old') AS user_status, ---首续贷
-  a.user_debt_status,  --用户类型
-  a.apply_channel_source,   ---产品包
-  c.asset_loan_channel,
-  c.product_form,
-  c.product_period_unit,
-  d.product_period as product,
-  a.period_seq,   ---期次
-  date_format(a.grant_time,'%Y-%m-%d') AS grant_time,      ---借款日期
-  datediff(a.finish_time,a.delay_due_time) AS date_diff,   ---账单结清日期差
-  date_format(a.delay_due_time,'%Y-%m') AS delay_due_month,   ---逾期日期月份
-  date_format(a.delay_due_time,'%Y-%m-%d')  AS delay_due_time,  ---逾期日期
-  date_format(a.finish_time,'%Y-%m-%d') AS finish_time,       ----结清日期
-  a.asset_overdue_period_days,           
-  if(a.delay_due_time < '2025-08-01' and a.finish_time is null ,datediff('2025-08-01',a.delay_due_time),datediff(a.finish_time,a.delay_due_time))  AS overdue_date_diff_202508,  -----截至2025-08-01日切片资产逾期阶段
-  if(a.delay_due_time < '2025-09-01' and a.finish_time is null ,datediff('2025-09-01',a.delay_due_time),datediff(a.finish_time,a.delay_due_time))  AS overdue_date_diff_202509,  -----截至2025-09-01日切片资产逾期阶段
-  if(a.delay_due_time < '2025-10-01' and a.finish_time is null ,datediff('2025-10-01',a.delay_due_time),datediff(a.finish_time,a.delay_due_time))  AS overdue_date_diff_202510,  -----截至2025-10-01日切片资产逾期阶段
-  if(a.delay_due_time < '2025-11-01' and a.finish_time is null ,datediff('2025-11-01',a.delay_due_time),datediff(a.finish_time,a.delay_due_time))  AS overdue_date_diff_202511,  -----截至2025-11-01日切片资产逾期阶段
-  if(a.delay_due_time < '2025-12-01' and a.finish_time is null ,datediff('2025-12-01',a.delay_due_time),datediff(a.finish_time,a.delay_due_time))  AS overdue_date_diff_202512,  -----截至2025-12-01日切片资产逾期阶段
-  if(a.delay_due_time < '2026-01-01' and a.finish_time is null ,datediff('2026-01-01',a.delay_due_time),datediff(a.finish_time,a.delay_due_time))  AS overdue_date_diff_202601,  -----截至2026-01-01日切片资产逾期阶段
-  a.granted_principal_period_amt,       --应还本金
-  a.repaid_principal_period_amt         --还款本金
-FROM 
-  dwb.dwb_asset_period_info AS a
-INNER JOIN  dwb.dwb_asset_info AS c ON a.asset_item_no = c.asset_item_no
-left JOIN dim.dim_product_split d on a.product_id = d.product_id
-WHERE 
-  1=1
-  and a.grant_time >= '2023-01-01'
-  and a.delay_due_time <= '2026-01-31'
-
-
-
-
-
-
-
-
-
-
 -----------------每月首日日期切片判断资产逾期各阶段的未还情况------------逾期90+细拆----------
 (
 select
@@ -423,6 +374,7 @@ group by 1,2,3,4
 
 )
 order by 1,2,3,4
+
 
 
 
